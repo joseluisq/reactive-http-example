@@ -1,35 +1,35 @@
-// import { catchError, of } from 'rxjs'
-import { Observable } from 'rxjs'
-import { Http, HttpHandler, HttpInterceptor } from 'reactive-http'
+import { Observable, catchError, of } from 'rxjs'
+import { Http, HttpHandler, HttpInterceptor, HttpRequestDeduplicator } from 'reactive-http'
 
-class Interceptor1 implements HttpInterceptor {
+class MyInterceptor implements HttpInterceptor {
     intercept(req: Request, next: HttpHandler): Observable<Response> {
-        console.log('first interceptor called!')
+        console.log('my custom interceptor!')
         return next(req)
     }
 }
 
-class Interceptor2 implements HttpInterceptor {
-    intercept(req: Request, next: HttpHandler): Observable<Response> {
-        console.log('second interceptor called!')
-        return next(req)
-    }
+interface Currency {
+    symbol: string
+    name: string
+    symbol_native: string
+    decimal_digits: number
+    rounding: number
+    iso_code: string
+    name_plural: string
 }
 
-interface Repository {
-    id: number
-    full_name: string
-    description: string
-    html_url: string
-    fork: boolean
+interface CurrencyMap {
+    [key: string]: Currency,
 }
 
-const http$ = new Http()
-http$.intercept(new Interceptor1())
-http$.intercept(new Interceptor2())
+const http = new Http()
+http.intercept(new MyInterceptor())
+http.intercept(new HttpRequestDeduplicator())
 
-const url = 'https://api.github.com/repos/joseluisq/reactive-http'
-const resp$ = http$.get<Repository>(url)
+const URL = 'https://raw.githubusercontent.com/joseluisq/json-datasets/master/json/currencies/currencies_symbols.json'
+const event1$ = http.get<CurrencyMap>(URL)
+const event2$ = http.get<CurrencyMap>(URL)
+const event3$ = http.get<CurrencyMap>(URL)
 // .pipe(
 //     catchError(err => {
 //         console.error(err)
@@ -37,11 +37,17 @@ const resp$ = http$.get<Repository>(url)
 //     })
 // )
 
-resp$.subscribe(repo => {
-    console.log('=== Github Repository API Response ===')
-    console.log('Repo id:', repo.id)
-    console.log('Repo name:', repo.full_name)
-    console.log('Repo description:', repo.description)
-    console.log('Repo url:', repo.html_url)
-    console.log('Repo fork:', repo.fork)
-})
+function display(subscriber: number, currency: Currency) {
+    console.log('==== Response for subscriber #' + subscriber)
+    console.log('symbol:', currency.symbol)
+    console.log('name:', currency.name)
+    console.log('symbol_native:', currency.symbol_native)
+    console.log('decimal_digits:', currency.decimal_digits)
+    console.log('rounding:', currency.rounding)
+    console.log('iso_code:', currency.iso_code)
+    console.log('name_plural:', currency.name_plural)
+}
+
+event1$.subscribe(currencyMap => display(1, currencyMap['EUR']))
+event2$.subscribe(currencyMap => display(2, currencyMap['USD']))
+event3$.subscribe(currencyMap => display(3, currencyMap['CNY']))
