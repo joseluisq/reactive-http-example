@@ -23,8 +23,7 @@ interface CurrencyMap {
 }
 
 const http = new Http()
-http.intercept(new MyInterceptor())
-http.intercept(new HttpRequestDeduplicator())
+http.intercept([new MyInterceptor(), new HttpRequestDeduplicator()])
 
 const URL = 'https://raw.githubusercontent.com/joseluisq/json-datasets/master/json/currencies/currencies_symbols.json'
 const event1$ = http.get<CurrencyMap>(URL)

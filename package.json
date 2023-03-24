@@ -9,7 +9,7 @@
     "start:web": "parcel index.html"
   },
   "dependencies": {
-    "reactive-http": "^0.0.3",
+    "reactive-http": "^0.0.4",
     "rxjs": "^7"
   },
   "devDependencies": {
